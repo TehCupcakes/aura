@@ -300,7 +300,8 @@ namespace Aura.Channel.Network.Handlers
 			}
 
 			var handler = ChannelServer.Instance.SkillManager.GetHandler<IUseable>(skillId);
-			if (handler == null)
+			var otherHandler = ChannelServer.Instance.SkillManager.GetHandler<ITargetable>(skillId);
+			if (handler == null && otherHandler == null)
 			{
 				Log.Unimplemented("SkillUse: Skill handler or interface for '{0}'.", skillId);
 				Send.ServerMessage(creature, Localization.Get("This skill isn't implemented yet."));
@@ -310,7 +311,13 @@ namespace Aura.Channel.Network.Handlers
 
 			try
 			{
-				handler.Use(creature, skill, packet);
+				if (handler != null)
+					handler.Use(creature, skill, packet);
+				if (otherHandler != null)
+				{
+					var targetEntityId = packet.GetLong();
+					otherHandler.Use(creature, skill, targetEntityId);
+				}
 			}
 			catch (NotImplementedException)
 			{

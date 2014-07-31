@@ -141,7 +141,7 @@
     <Compile Include="Skills\Actions\ContinentWarpSkillHandler.cs" />
     <Compile Include="Skills\Base\CombatSkillHandler.cs" />
     <Compile Include="Skills\Base\Interfaces.cs" />
-    <Compile Include="Skills\Base\StandardUseHandler.cs" />
+    <Compile Include="Skills\Base\StandardTargetHandler.cs" />
     <Compile Include="Skills\Base\StandardPrepareHandler.cs" />
     <Compile Include="Skills\Base\StartStopSkillHandler.cs" />
     <Compile Include="Skills\CombatAction.cs" />

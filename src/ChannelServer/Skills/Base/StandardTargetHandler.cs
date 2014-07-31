@@ -8,7 +8,7 @@ using System;
 
 namespace Aura.Channel.Skills.Base
 {
-	public class StandardUseHandler : IPreparable, IReadyable, ICompletable, ICancelable, ITargetable
+	public class StandardTargetHandler : IPreparable, IReadyable, ICompletable, ICancelable, ITargetable
 	{
 		public virtual void Prepare(Creature creature, Skill skill, int castTime, Packet packet)
 		{

@@ -19,7 +19,7 @@ namespace Aura.Channel.Skills.FirstAid
 	/// Handle for the First Aid skill.
 	/// </summary>
 	[Skill(SkillId.FirstAid)]
-	public class FirstAid : StandardUseHandler
+	public class FirstAid : StandardTargetHandler
 	{
 		public override void Prepare(Creature creature, Skill skill, int castTime, Packet packet)
 		{
@@ -97,7 +97,7 @@ namespace Aura.Channel.Skills.FirstAid
 				result = result / 2; // 50% effective
 			}
 
-			// Get the int value
+			// Get the int value of injuries to be healed
 			result = result / 100 * (int)target.LifeMax;
 
 			return result;
