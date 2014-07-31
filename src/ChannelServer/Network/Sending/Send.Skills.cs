@@ -303,6 +303,23 @@ namespace Aura.Channel.Network.Sending
 		}
 
 		/// <summary>
+		/// Sends SkillUse to creature's client.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="skillId"></param>
+		/// <param name="entityId"></param>
+		public static void SkillUseFirstAid(Creature creature, SkillId skillId, long entityId)
+		{
+			var packet = new Packet(Op.SkillUse, creature.EntityId);
+			packet.PutUShort((ushort)skillId);
+			packet.PutLong(entityId);
+			packet.PutInt(0); // ?
+			packet.PutInt(1); // ?
+
+			creature.Client.Send(packet);
+		}
+
+		/// <summary>
 		/// Broadcasts Effect in range of creature.
 		/// </summary>
 		/// <param name="creature"></param>
@@ -427,6 +444,39 @@ namespace Aura.Channel.Network.Sending
 			packet.PutUShort((ushort)skillId);
 			if (skillId != SkillId.None)
 				packet.PutInt(castTime);
+
+			creature.Client.Send(packet);
+		}
+
+		/// <summary>
+		/// Sends SkillStackSet to creature's client.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="skillId"></param>
+		/// <param name="extra"></param>
+		public static void SkillStackSet(Creature creature, SkillId skillId, byte stack, byte increment = 1)
+		{
+			var packet = new Packet(Op.SkillStackSet, creature.EntityId);
+			packet.PutByte((byte)stack);
+			packet.PutByte((byte)increment); // ??
+			packet.PutUShort((ushort)skillId);
+
+			creature.Client.Send(packet);
+		}
+
+		/// <summary>
+		/// Sends SkillStackUpdate to creature's client.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="skillId"></param>
+		/// <param name="extra"></param>
+		public static void SkillStackUpdate(Creature creature, SkillId skillId, byte newVal, byte oldVal, byte canceled)
+		{
+			var packet = new Packet(Op.SkillStackUpdate, creature.EntityId);
+			packet.PutByte((byte)newVal);
+			packet.PutByte((byte)oldVal);
+			packet.PutByte((byte)canceled);		// Was this stack update because the skill was canceled?
+			packet.PutUShort((ushort)skillId);
 
 			creature.Client.Send(packet);
 		}
