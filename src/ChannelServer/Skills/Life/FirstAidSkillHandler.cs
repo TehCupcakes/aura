@@ -87,7 +87,7 @@ namespace Aura.Channel.Skills.FirstAid
 			creature.Skills.Callback(SkillId.FirstAid);
 
 			// Heal wounds
-			target.HealInjuries(heal);
+			target.HealInjuries((int)heal);
 
 			// Healing effect
 			Send.HealEffect(creature, target);
@@ -109,7 +109,7 @@ namespace Aura.Channel.Skills.FirstAid
 			return item;
 		}
 
-		protected int GetHeal(Skill skill, Creature target)
+		protected float GetHeal(Skill skill, Creature target)
 		{
 			// No wound healing effect for novice; just train skill
 			if (skill.Info.Rank == SkillRank.Novice)
@@ -120,17 +120,17 @@ namespace Aura.Channel.Skills.FirstAid
 
 			// Get base heal value (% of target's LifeMax)
 			Random r = new Random(DateTime.Now.Millisecond);
-			var result = r.Next((int)skill.RankData.Var1, (int)skill.RankData.Var2);
+			float result = r.Next((int)skill.RankData.Var1, (int)skill.RankData.Var2);
 
 			// Higher quality bandages are more effective
 			// TODO: Figure out what these values are
 
 			// Less effective on standing characters
 			if (!target.Has(CreatureStates.SitDown))
-				result = result / 2; // 50% effective
+				result = result / 2f; // 50% effective
 
 			// Get the int value of injuries to be healed
-			result = result / 100 * (int)target.LifeMax;
+			result = (int)(result / 100f * target.LifeMax);
 
 			// Can't heal target more than they are injured
 			if (result > target.Injuries)

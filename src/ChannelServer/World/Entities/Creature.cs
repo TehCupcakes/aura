@@ -1246,7 +1246,7 @@ namespace Aura.Channel.World.Entities
 			if (this.Injuries < 0)
 				this.Injuries = 0;
 
-			Send.StatUpdate(this, StatUpdateType.Private, Stat.Life, Stat.LifeInjured, Stat.Mana, Stat.Stamina, Stat.Hunger);
+			Send.StatUpdate(this, StatUpdateType.Private, Stat.Life, Stat.LifeInjured, Stat.Mana);
 			Send.StatUpdate(this, StatUpdateType.Public, Stat.Life, Stat.LifeInjured, Stat.Mana);
 		}
 
