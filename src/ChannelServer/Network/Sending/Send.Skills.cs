@@ -10,7 +10,6 @@ using Aura.Shared.Network;
 using Aura.Channel.World;
 using Aura.Channel.Skills;
 using Aura.Shared.Mabi.Const;
-using Aura.Shared.Util;
 using Aura.Data.Database;
 
 namespace Aura.Channel.Network.Sending
@@ -229,7 +228,6 @@ namespace Aura.Channel.Network.Sending
 		/// <param name="unkByte"></param>
 		public static void SkillUse(Creature creature, SkillId skillId, byte unkByte)
 		{
-			Log.Info("SkillUse.");
 			var packet = new Packet(Op.SkillUse, creature.EntityId);
 			packet.PutUShort((ushort)skillId);
 			packet.PutByte(unkByte);
@@ -312,7 +310,6 @@ namespace Aura.Channel.Network.Sending
 		/// <param name="entityId"></param>
 		public static void SkillUseFirstAid(Creature creature, SkillId skillId, long entityId)
 		{
-			Log.Info("SkillUseFirstAid.");
 			var packet = new Packet(Op.SkillUse, creature.EntityId);
 			packet.PutUShort((ushort)skillId);
 			packet.PutLong(entityId);

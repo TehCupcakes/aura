@@ -299,6 +299,7 @@ namespace Aura.Channel.Network.Handlers
 				return;
 			}
 
+			// There has to be a better way to do this...
 			var handler = ChannelServer.Instance.SkillManager.GetHandler<IUseable>(skillId);
 			var otherHandler = ChannelServer.Instance.SkillManager.GetHandler<ITargetable>(skillId);
 			if (handler == null && otherHandler == null)
