@@ -73,7 +73,7 @@ namespace Aura.Channel.Network.Sending
 			packet.PutInt(pos.X);
 			packet.PutInt(pos.Y);
 			packet.PutByte(creature.Direction);
-			packet.PutInt((int)creature.BattleStance);
+			packet.PutInt(Convert.ToInt32(creature.IsInBattleStance));
 			packet.PutByte((byte)creature.Inventory.WeaponSet);
 			packet.PutUInt(creature.Color1);
 			packet.PutUInt(creature.Color2);
@@ -1177,8 +1177,15 @@ namespace Aura.Channel.Network.Sending
 				packet.PutString(prop.State);
 				packet.PutLong(0);
 
-				packet.PutByte(true); // Extra data
-				packet.PutString(prop.Xml.ToString());
+				if (prop.HasXml)
+				{
+					packet.PutByte(true);
+					packet.PutString(prop.Xml.ToString());
+				}
+				else
+				{
+					packet.PutByte(false);
+				}
 
 				packet.PutInt(0);
 				packet.PutShort(0);
@@ -1187,7 +1194,17 @@ namespace Aura.Channel.Network.Sending
 			{
 				packet.PutString(prop.State);
 				packet.PutLong(DateTime.Now);
-				packet.PutByte(false);
+
+				if (prop.HasXml)
+				{
+					packet.PutByte(true);
+					packet.PutString(prop.Xml.ToString());
+				}
+				else
+				{
+					packet.PutByte(false);
+				}
+
 				packet.PutFloat(prop.Info.Direction);
 			}
 
@@ -1198,13 +1215,17 @@ namespace Aura.Channel.Network.Sending
 		{
 			packet.PutString(prop.State);
 			packet.PutLong(DateTime.Now);
+
 			if (prop.HasXml)
-				packet.PutByte(false);
-			else
 			{
 				packet.PutByte(true);
 				packet.PutString(prop.Xml.ToString());
 			}
+			else
+			{
+				packet.PutByte(false);
+			}
+
 			packet.PutFloat(prop.Info.Direction);
 			packet.PutShort(0);
 
