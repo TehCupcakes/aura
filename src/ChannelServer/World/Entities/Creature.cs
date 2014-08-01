@@ -1237,6 +1237,20 @@ namespace Aura.Channel.World.Entities
 		}
 
 		/// <summary>
+		/// Heals some of the creature's wounds.
+		/// </summary>
+		/// <param name="amount"></param>
+		public void HealInjuries(int amount)
+		{
+			this.Injuries -= amount;
+			if (this.Injuries < 0)
+				this.Injuries = 0;
+
+			Send.StatUpdate(this, StatUpdateType.Private, Stat.Life, Stat.LifeInjured, Stat.Mana, Stat.Stamina, Stat.Hunger);
+			Send.StatUpdate(this, StatUpdateType.Public, Stat.Life, Stat.LifeInjured, Stat.Mana);
+		}
+
+		/// <summary>
 		/// Increases AP and updates client.
 		/// </summary>
 		/// <param name="amount"></param>

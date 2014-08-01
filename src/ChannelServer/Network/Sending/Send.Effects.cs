@@ -130,5 +130,20 @@ namespace Aura.Channel.Network.Sending
 
 			creature.Region.Broadcast(packet, creature);
 		}
+
+		/// <summary>
+		/// Broadcasts Effect in range of creature.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="target"></param>
+		public static void HealEffect(Creature creature, Creature target)
+		{
+			var packet = new Packet(Op.Effect, creature.EntityId);
+			packet.PutInt(E.UseMagic);
+			packet.PutString("healing_firstaid");
+			packet.PutLong(target.EntityId);
+
+			creature.Region.Broadcast(packet, creature);
+		}
 	}
 }

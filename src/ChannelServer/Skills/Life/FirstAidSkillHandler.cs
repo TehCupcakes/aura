@@ -4,6 +4,7 @@
 using Aura.Channel.Network.Sending;
 using Aura.Channel.Skills.Base;
 using Aura.Channel.World.Entities;
+using Aura.Shared.Mabi;
 using Aura.Shared.Mabi.Const;
 using Aura.Shared.Network;
 using Aura.Shared.Util;
@@ -23,10 +24,31 @@ namespace Aura.Channel.Skills.FirstAid
 	{
 		public override void Prepare(Creature creature, Skill skill, int castTime, Packet packet)
 		{
+			// Get entityId of bandage if supplied
+			var dict = new MabiDictionary();
+			Item bandage = null;
+			dict.Parse(packet.GetString());
+			bandage = creature.Inventory.GetItem(dict.GetLong("ITEMID"));
+
 			Send.SkillFlashEffect(creature);
 			Send.SkillPrepare(creature, skill.Info.Id, castTime);
 
 			creature.Skills.ActiveSkill = skill;
+
+			// Update item and send skill complete from Complete
+			creature.Skills.Callback(SkillId.FirstAid, () =>
+			{
+				if (bandage == null)
+					bandage = this.GetBandage(creature);
+				if (bandage == null)
+				{
+					Send.SkillPrepareSilentCancel(creature, skill.Info.Id);
+					return;
+				}
+
+				// Use bandage
+				creature.Inventory.Decrement(bandage);
+			});
 		}
 
 		public override void Ready(Creature creature, Skill skill, Packet packet)
@@ -50,30 +72,41 @@ namespace Aura.Channel.Skills.FirstAid
 				return TargetResult.OutOfRange;
 
 			// Stop movement
-			creature.StopMove();
-
-			// Determine which bandage to use
-			Item bandage = this.GetBandage(creature);
+			creature.StopMove();			
 
 			// Calculate injuries to be healed (% of LifeMax)
 			var heal = this.GetHeal(skill, target);
 
+			// Use skill
+			Send.SkillUseFirstAid(creature, skill.Info.Id, targetEntityId);
+
 			// Update skill stack
 			Send.SkillStackUpdate(creature, skill.Info.Id, 0, 1, 0);
 
-			// Heal wounds
-			// use bandage
-			target.Injuries -= heal;
+			// Use bandage
+			creature.Skills.Callback(SkillId.FirstAid);
 
-			Send.SkillUseFirstAid(creature, skill.Info.Id, targetEntityId);
+			// Heal wounds
+			target.HealInjuries(heal);
+
+			// Healing effect
+			Send.HealEffect(creature, target);
 
 			return TargetResult.Okay;
 		}
 
 		protected Item GetBandage(Creature creature)
 		{
-			// TODO: Get creature's finest bandage
-			return null;
+			Item item = null;
+
+			// First aid always uses highest grade bandage the creature has
+			item = creature.Inventory.GetItem((int)60119);
+			if (item == null) item = creature.Inventory.GetItem((int)60049);
+			if (item == null) item = creature.Inventory.GetItem((int)60048);
+			if (item == null) item = creature.Inventory.GetItem((int)60047);
+			if (item == null) item = creature.Inventory.GetItem((int)60005);
+
+			return item;
 		}
 
 		protected int GetHeal(Skill skill, Creature target)
@@ -88,17 +121,20 @@ namespace Aura.Channel.Skills.FirstAid
 			// Get base heal value (% of target's LifeMax)
 			Random r = new Random(DateTime.Now.Millisecond);
 			var result = r.Next((int)skill.RankData.Var1, (int)skill.RankData.Var2);
+
 			// Higher quality bandages are more effective
 			// TODO: Figure out what these values are
 
 			// Less effective on standing characters
 			if (!target.Has(CreatureStates.SitDown))
-			{
 				result = result / 2; // 50% effective
-			}
 
 			// Get the int value of injuries to be healed
 			result = result / 100 * (int)target.LifeMax;
+
+			// Can't heal target more than they are injured
+			if (result > target.Injuries)
+				result = (int)target.Injuries;
 
 			return result;
 		}

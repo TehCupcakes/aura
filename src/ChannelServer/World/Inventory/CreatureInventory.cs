@@ -216,6 +216,25 @@ namespace Aura.Channel.World
 		}
 
 		/// <summary>
+		/// Searches inventory for an item with the supplied itemId.
+		/// </summary>
+		/// <param name="itemId"></param>
+		/// <returns>Last found (bottom-right-most)</returns>
+		public Item GetItem(int itemId)
+		{
+			Item item = null;
+
+			lock (_pockets)
+				foreach (var pocket in _pockets.Values.Where(a => !InvisiblePockets.Contains(a.Pocket)))
+					foreach (var i in pocket.Items.Where(a => a != null))
+						if (i.Info.Id == itemId)
+							item = i;
+						// Do not return here because we want the last item to be returned
+
+			return item;
+		}
+
+		/// <summary>
 		/// Returns item at the location, or null.
 		/// </summary>
 		/// <param name="pocket"></param>
