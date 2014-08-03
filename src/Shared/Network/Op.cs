@@ -218,6 +218,27 @@ namespace Aura.Shared.Network
 		public const int ClearNpcShop = 0x7158; // Empties tabs
 		public const int AddToNpcShop = 0x7159; // Adds items while shop is open, works like open
 		public const int OpenNpcShop = 0x715E;
+
+		public const int BankRaceLoaded = 0x7211;
+		public const int OpenBank = 0x7212;
+		public const int CloseBank = 0x7215;
+		public const int CloseBankR = 0x7216;
+		public const int BankSelect = 0x7217;
+		public const int BankSelectR = 0x7218;
+		public const int BankMove = 0x7219;
+		public const int BankMoveR = 0x721A;
+		public const int BankDeposit = 0x721B;
+		public const int BankDepositR = 0x721C;
+		public const int BankWithdraw = 0x721D;
+		public const int BankWithdrawR = 0x721E;
+		public const int BankGoldSet = 0x721F;
+		public const int BankUpdate = 0x7220;
+		public const int BankSelectInfo = 0x7221;
+		public const int BankTransferNotice = 0x7222;
+		public const int BankTransfer = 0x7223;
+		public const int BankTransferR = 0x7224;
+		public const int BankTransferInfo = 0x7228;
+
 		public const int OpenMail = 0x7242;
 		public const int CloseMail = 0x7243;
 		public const int ConfirmMailRecipent = 0x7244;
@@ -376,6 +397,8 @@ namespace Aura.Shared.Network
 		public const int UmbrellaJump = 0xA8E0;
 		public const int UmbrellaJumpR = 0xA8E1;
 		public const int UmbrellaLand = 0xA8E2;
+		public const int LockBank = 0xA8E3;
+		public const int LockBankR = 0xA8E4;
 		public const int SetBgm = 0xA910;
 		public const int UnsetBgm = 0xA911;
 		public const int EnableRoyalAlchemist = 0xA9A3;
