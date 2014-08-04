@@ -20,30 +20,35 @@ namespace Aura.Channel.Network.Sending
 		/// <param name="creature"></param>
 		/// <param name="item"></param>
 		/// <param name="source"></param>
-		public static void OpenBank(Creature creature, string accountName, Bank bank, string location)
+		public static void OpenBank(Creature creature, string location)
 		{
-			if (bank == null)
-				bank = new Bank(creature);
-
+			var bank = creature.Client.OpenBank;
 			var packet = new Packet(Op.OpenBank, creature.EntityId);
 			packet.PutByte(1); // ?
-			packet.PutByte(bank.assistant);
-			packet.PutLong(bank.lastOpened);
+			packet.PutByte(bank.Assistant);
+			packet.PutLong(bank.LastOpened);
 			packet.PutByte(0); // ?
-			packet.PutString(accountName);
+			packet.PutString(creature.Client.Account.Id);
 			packet.PutString(location);
 			packet.PutString(bank.LocDisplayName(location));
-			packet.PutInt(bank.gold);
-			packet.PutInt((int)bank.exists);
-			if ((int)bank.exists == 1)
+			packet.PutInt(bank.Gold);
+			packet.PutInt(bank.Exists);
+			if (bank.Exists == 1)
 			{
 				packet.PutString(creature.Name);
-				packet.PutByte(bank.assistant);
+				packet.PutByte(bank.Assistant);
 				packet.PutInt(12); // Default width of bank inventory (= 12 without Inventory Plus)
-				packet.PutInt(bank.height);
-				packet.PutInt(bank.width);
+				packet.PutInt(bank.Height);
+				packet.PutInt(bank.Width);
 			}
 
+			creature.Client.Send(packet);
+		}
+
+		public static void CloseBankR(Creature creature, bool success)
+		{
+			var packet = new Packet(Op.CloseBankR, creature.EntityId);
+			packet.PutByte(success);
 			creature.Client.Send(packet);
 		}
 	}

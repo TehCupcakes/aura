@@ -401,6 +401,17 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
+		/// Opens bank for player.
+		/// </summary>
+		/// <param name="shopType"></param>
+		protected void OpenBank(string location)
+		{
+			// TODO: Check if bank exists before making a new one.
+			var bank = new Bank(this.Player, location);
+			Send.OpenBank(this.Player, location);
+		}
+
+		/// <summary>
 		/// Joins lines and sends them as Msg,
 		/// but only once per creature and NPC.
 		/// </summary>

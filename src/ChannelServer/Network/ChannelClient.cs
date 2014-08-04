@@ -7,6 +7,7 @@ using Aura.Channel.Database;
 using Aura.Channel.Scripting;
 using Aura.Channel.World.Entities;
 using Aura.Shared.Network;
+using Aura.Channel.World;
 
 namespace Aura.Channel.Network
 {
@@ -28,6 +29,11 @@ namespace Aura.Channel.Network
 		/// Information about a current NPC dialog.
 		/// </summary>
 		public NpcSession NpcSession { get; set; }
+
+		/// <summary>
+		/// Stores bank reference if bank is open.
+		/// </summary>
+		public Bank OpenBank { get; set; }
 
 		public ChannelClient()
 		{

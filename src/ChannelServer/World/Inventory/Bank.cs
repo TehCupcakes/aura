@@ -9,6 +9,7 @@ using Aura.Channel.World.Entities;
 using Aura.Data.Database;
 using Aura.Shared.Mabi.Const;
 using Aura.Shared.Util;
+using Aura.Channel.Database;
 
 namespace Aura.Channel.World
 {
@@ -27,22 +28,36 @@ namespace Aura.Channel.World
 
 		private Creature _creature;
 		private Dictionary<Pocket, InventoryPocket> _pockets;
-		private long lastOpened;
-		public byte assistant { get; set; }
-		public int gold { get; set; }
-		public string location { get; protected set; }
-		public bool exists { get; protected set;  }
+		public long Id { get; set; }
+		public long LastOpened { get; set; }
+		public byte Assistant { get; set; }
+		public int Gold { get; set; }
+		public int Height { get; set; }
+		public int Width { get; set; }
+		public string Location { get; protected set; }
+		public int Exists { get; protected set;  }
 
-		public Bank(Creature creature)
+		public Bank(Creature creature, string location)
 		{
 			_creature = creature;
 			_pockets = new Dictionary<Pocket, InventoryPocket>();
-			lastOpened = DateTime.Now.Ticks;
+			LastOpened = DateTime.Now.Ticks;
+			Assistant = 0;
+			Gold = 0;
+			Height = DefaultHeight;
+			Width = DefaultWidth;
+			Location = location;
 
-			// Cursor, Temp, Quests
-			this.Add(new InventoryPocketStack(Pocket.Temporary));
-			this.Add(new InventoryPocketStack(Pocket.Quests));
-			this.Add(new InventoryPocketSingle(Pocket.Cursor));
+			// Bank reference needs to be stored in client so it can
+			// be close packet is received.
+			creature.Client.OpenBank = this;
+
+			// Is this relevant for bank?
+			//this.Add(new InventoryPocketStack(Pocket.Temporary));
+			//this.Add(new InventoryPocketStack(Pocket.Quests));
+			//this.Add(new InventoryPocketSingle(Pocket.Cursor));
+			
+			Exists = ChannelDb.Instance.LoadBank(creature);
 		}
 
 		/// <summary>
@@ -61,13 +76,6 @@ namespace Aura.Channel.World
 			get
 			{
 				return _pockets.Values.SelectMany(pocket => pocket.Items.Where(a => a != null));
-
-				//var x = (from pocket in _pockets.Values.Where(a => a.Pocket.IsEquip())
-				//         where pocket.Items.Any()
-				//         select pocket into p
-				//         from item in p.Items
-				//         where item != null
-				//         select item).ToArray();
 			}
 		}
 
@@ -95,14 +103,6 @@ namespace Aura.Channel.World
 		}
 
 		/// <summary>
-		/// Returns the amount of gold items in the inventory.
-		/// </summary>
-		public int Gold
-		{
-			get { return this.gold; }
-		}
-
-		/// <summary>
 		/// Adds pocket to inventory.
 		/// </summary>
 		/// <param name="inventoryPocket"></param>
@@ -123,22 +123,22 @@ namespace Aura.Channel.World
 			if (_creature.RaceData == null)
 				Log.Warning("Race for creature '{0}' ({1}) not loaded before initializing main inventory.", _creature.Name, _creature.EntityIdHex);
 
-			var width = (_creature.RaceData != null ? _creature.RaceData.InventoryWidth : DefaultWidth);
-			if (width > MaxWidth)
+			Width = (_creature.RaceData != null ? 24 : DefaultWidth);
+			if (Width > MaxWidth)
 			{
-				width = MaxWidth;
+				Width = MaxWidth;
 				Log.Warning("AddMainInventory: Width exceeds max, using {0} instead.", MaxWidth);
 			}
 
-			var height = (_creature.RaceData != null ? _creature.RaceData.InventoryHeight : DefaultHeight);
-			if (height > MaxHeight)
+			Height = (_creature.RaceData != null ? 8 : DefaultHeight);
+			if (Height > MaxHeight)
 			{
-				height = MaxHeight;
+				Height = MaxHeight;
 				Log.Warning("AddMainInventory: Height exceeds max, using {0} instead.", MaxHeight);
 			}
 
 			// TODO: Race check
-			this.Add(new InventoryPocketNormal(Pocket.Inventory, width, height));
+			this.Add(new InventoryPocketNormal(Pocket.Inventory, Width, Height));
 		}
 
 		/// <summary>
@@ -295,8 +295,6 @@ namespace Aura.Channel.World
 				Send.ItemMoveInfo(_creature, item, source, collidingItem);
 			}
 
-			this.UpdateInventory(item, source, target);
-
 			return true;
 		}
 
@@ -320,7 +318,6 @@ namespace Aura.Channel.World
 			if (success)
 			{
 				Send.ItemNew(_creature, item);
-				this.UpdateEquipReferences(pocket);
 
 				// Add bag pocket if it doesn't already exist.
 				if (item.OptionInfo.LinkedPocketId != Pocket.None && !this.Has(item.OptionInfo.LinkedPocketId))
@@ -341,7 +338,6 @@ namespace Aura.Channel.World
 			if (!this.Add(item, pocket))
 				return false;
 
-			this.CheckEquipMoved(item, Pocket.None, pocket);
 			return true;
 		}
 
@@ -355,7 +351,6 @@ namespace Aura.Channel.World
 				return false;
 
 			_pockets[item.Info.Pocket].AddUnsafe(item);
-			this.UpdateEquipReferences(item.Info.Pocket);
 
 			return true;
 		}
@@ -544,8 +539,6 @@ namespace Aura.Channel.World
 				{
 					Send.ItemRemove(_creature, item);
 
-					this.UpdateInventory(item, item.Info.Pocket, Pocket.None);
-
 					// Remove bag pocket
 					if (item.OptionInfo.LinkedPocketId != Pocket.None)
 					{
@@ -675,19 +668,6 @@ namespace Aura.Channel.World
 		// ------------------------------------------------------------------
 
 		/// <summary>
-		/// Checks and updates all equipment references for source and target.
-		/// </summary>
-		/// <param name="item"></param>
-		/// <param name="source"></param>
-		/// <param name="target"></param>
-		private void UpdateInventory(Item item, Pocket source, Pocket target)
-		{
-			this.CheckLeftHand(item, source, target);
-			this.UpdateEquipReferences(source, target);
-			this.CheckEquipMoved(item, source, target);
-		}
-
-		/// <summary>
 		/// Sends amount update or remove packets for all items, depending on
 		/// their amount.
 		/// </summary>
@@ -703,56 +683,6 @@ namespace Aura.Channel.World
 					Send.ItemAmount(_creature, item);
 				else
 					Send.ItemRemove(_creature, item);
-			}
-		}
-
-		/// <summary>
-		/// Updates quick access equipment refernces.
-		/// </summary>
-		/// <param name="toCheck"></param>
-		private void UpdateEquipReferences(params Pocket[] toCheck)
-		{
-			var firstSet = (this.WeaponSet == WeaponSet.First);
-			var updatedHands = false;
-
-			foreach (var pocket in toCheck)
-			{
-				// Update all "hands" at once, easier.
-				if (!updatedHands && pocket >= Pocket.RightHand1 && pocket <= Pocket.Magazine2)
-				{
-					this.RightHand = _pockets[firstSet ? Pocket.RightHand1 : Pocket.RightHand2].GetItemAt(0, 0);
-					this.LeftHand = _pockets[firstSet ? Pocket.LeftHand1 : Pocket.LeftHand2].GetItemAt(0, 0);
-					this.Magazine = _pockets[firstSet ? Pocket.Magazine1 : Pocket.Magazine2].GetItemAt(0, 0);
-
-					// Don't do it twice.
-					updatedHands = true;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Runs equipment updates if necessary.
-		/// </summary>
-		/// <param name="item"></param>
-		/// <param name="source"></param>
-		/// <param name="target"></param>
-		private void CheckEquipMoved(Item item, Pocket source, Pocket target)
-		{
-			if (source.IsEquip())
-				Send.EquipmentMoved(_creature, source);
-
-			if (target.IsEquip())
-				Send.EquipmentChanged(_creature, item);
-
-			// Send stat update when moving equipment
-			if (source.IsEquip() || target.IsEquip())
-			{
-				Send.StatUpdate(_creature, StatUpdateType.Private,
-					Stat.AttackMinBaseMod, Stat.AttackMaxBaseMod,
-					Stat.WAttackMinBaseMod, Stat.WAttackMaxBaseMod,
-					Stat.BalanceBaseMod, Stat.CriticalBaseMod,
-					Stat.DefenseBaseMod, Stat.ProtectionBaseMod
-				);
 			}
 		}
 

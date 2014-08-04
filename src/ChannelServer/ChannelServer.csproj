@@ -87,6 +87,7 @@
     <Compile Include="Database\ChannelDb.cs" />
     <Compile Include="Network\ChannelClient.cs" />
     <Compile Include="ChannelServer.cs" />
+    <Compile Include="Network\Handlers\Bank.cs" />
     <Compile Include="Network\Handlers\Base.cs" />
     <Compile Include="Network\Handlers\Combat.cs" />
     <Compile Include="Network\Handlers\Chat.cs" />
@@ -102,6 +103,7 @@
     <Compile Include="Network\Handlers\Misc.cs" />
     <Compile Include="Network\Handlers\Movement.cs" />
     <Compile Include="Network\Handlers\NPCs.cs" />
+    <Compile Include="Network\Sending\Send.Bank.cs" />
     <Compile Include="Network\Sending\Send.GMCP.cs" />
     <Compile Include="Network\Sending\Send.Quests.cs" />
     <Compile Include="Network\Sending\Send.Effects.cs" />
@@ -183,6 +185,7 @@
     <Compile Include="World\Entities\PlayerCreature.cs" />
     <Compile Include="World\Entities\Prop.cs" />
     <Compile Include="World\EventManager.cs" />
+    <Compile Include="World\Inventory\Bank.cs" />
     <Compile Include="World\Inventory\CreatureInventory.cs" />
     <Compile Include="World\Inventory\InventoryPockets.cs" />
     <Compile Include="World\Location.cs" />

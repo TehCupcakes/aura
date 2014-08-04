@@ -1123,5 +1123,147 @@ namespace Aura.Channel.Database
 				return (cmd.Execute() > 0);
 			}
 		}
+
+		/// <summary>
+		/// Loads bank information for account.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="bank"></param>
+		/// <returns></returns>
+		public int LoadBank(Creature creature)
+		{
+			var bank = creature.Client.OpenBank;
+			if (bank == null)
+				return 0;
+
+			using (var conn = AuraDb.Instance.Connection)
+			using (var transaction = conn.BeginTransaction())
+			{
+				using (var mc = new MySqlCommand("SELECT * FROM `banks` WHERE `accountId` = @id", conn))
+				{
+					mc.Parameters.AddWithValue("@id", creature.Client.Account.Id);
+
+					using (var reader = mc.ExecuteReader())
+					{
+						if (reader.HasRows)
+						{
+							reader.Read();
+
+							bank.Id = reader.GetInt64("bankId");
+							bank.Gold = reader.GetInt32("gold");
+							bank.LastOpened = reader.GetDateTime("lastOpened").Ticks;
+						}
+						else
+						{
+							// This account doesn't have a bank yet, so make a new one
+							using (var cmd = new InsertCommand("INSERT INTO `banks` {0}", conn, transaction))
+							{
+								cmd.Set("accountId", creature.Client.Account.Id);
+								cmd.Set("gold", bank.Gold);
+								cmd.Set("lastOpened", bank.LastOpened);
+
+								cmd.Execute();
+								bank.Id = cmd.LastId;
+							}
+						}
+					}
+				}
+
+				transaction.Commit();
+			}
+
+			return this.LoadBankAccount(creature);
+		}
+
+		/// <summary>
+		/// Loads bank account info for creature. (Helps LoadBank)
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="bank"></param>
+		/// <returns></returns>
+		public int LoadBankAccount(Creature creature)
+		{
+			var bank = creature.Client.OpenBank;
+			if (bank == null)
+				return 0;
+
+			int result = 0;
+
+			using (var conn = AuraDb.Instance.Connection)
+			using (var transaction = conn.BeginTransaction())
+			{
+				using (var mc = new MySqlCommand("SELECT * FROM `bank_accounts` WHERE `creatureName` = @name", conn))
+				{
+					mc.Parameters.AddWithValue("@name", creature.Name);
+
+					using (var reader = mc.ExecuteReader())
+					{
+						if (reader.HasRows)
+						{
+							reader.Read();
+
+							//bank.Assistant = reader.GetByte("assistantId");
+							bank.Width = reader.GetInt32("width");
+							bank.Height = reader.GetInt32("height");
+
+							result = 1;
+						}
+						else
+						{
+							// This creature doesn't have a bank account yet, so make a new one
+							using (var cmd = new InsertCommand("INSERT INTO `banks_accounts` {0}", conn, transaction))
+							{
+								cmd.Set("creatureName", creature.Name);
+								cmd.Set("bankId", bank.Id);
+								cmd.Set("assistantId", bank.Assistant);
+								cmd.Set("width", bank.Width);
+								cmd.Set("height", bank.Height);
+
+								cmd.Execute();
+							}
+							result = 0;
+						}
+					}
+				}
+
+				transaction.Commit();
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Saves bank info; called on bank close.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="bank"></param>
+		public bool SaveBank(Creature creature)
+		{
+			var bank = creature.Client.OpenBank;
+			if (bank == null)
+				return false;
+
+			try
+			{
+				using (var conn = AuraDb.Instance.Connection)
+				using (var cmd = new UpdateCommand("UPDATE `banks` SET {0} WHERE `accountId` = @id", conn))
+				{
+					cmd.AddParameter("@id", creature.Client.Account.Id);
+					cmd.Set("gold", bank.Gold);
+					cmd.Set("lastOpened", DateTime.Now);
+
+					cmd.Execute();
+				}
+				// TODO: Save bank items.
+
+				return true;
+			}
+			catch (MySqlException e)
+			{
+				Log.Error("Failed to save bank for {0}.", creature.Name);
+				Log.Debug(e);
+				return false;
+			}
+		}
 	}
 }
