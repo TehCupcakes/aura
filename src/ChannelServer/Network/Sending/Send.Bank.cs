@@ -15,6 +15,44 @@ namespace Aura.Channel.Network.Sending
 	public static partial class Send
 	{
 		/// <summary>
+		/// Updates the amount of gold in the bank.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="amount"></param>
+		public static void BankGoldSet(Creature creature, int amount)
+		{
+			var bank = creature.Client.OpenBank;
+			var packet = new Packet(Op.BankGoldSet, creature.EntityId);
+			packet.PutInt(bank.Gold);
+
+			creature.Client.Send(packet);
+		}
+
+		/// <summary>
+		/// Response afer depositing gold.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="success"></param>
+		public static void BankDepositR(Creature creature, bool success)
+		{
+			var packet = new Packet(Op.BankDepositR, creature.EntityId);
+			packet.PutByte(success);
+			creature.Client.Send(packet);
+		}
+
+		/// <summary>
+		/// Response afer withdrawing gold.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="success"></param>
+		public static void BankWithdrawR(Creature creature, bool success)
+		{
+			var packet = new Packet(Op.BankWithdrawR, creature.EntityId);
+			packet.PutByte(success);
+			creature.Client.Send(packet);
+		}
+
+		/// <summary>
 		/// Sends OpenBank to creature's client.
 		/// </summary>
 		/// <param name="creature"></param>
@@ -45,6 +83,11 @@ namespace Aura.Channel.Network.Sending
 			creature.Client.Send(packet);
 		}
 
+		/// <summary>
+		/// Response after closing bank.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="success"></param>
 		public static void CloseBankR(Creature creature, bool success)
 		{
 			var packet = new Packet(Op.CloseBankR, creature.EntityId);

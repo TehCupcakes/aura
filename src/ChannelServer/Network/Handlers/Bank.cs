@@ -17,6 +17,52 @@ namespace Aura.Channel.Network.Handlers
 	public partial class ChannelServerHandlers : PacketHandlerManager<ChannelClient>
 	{
 		/// <summary>
+		/// Withdraw gold in the bank.
+		/// </summary>
+		/// <param name="client"></param>
+		/// <param name="packet"></param>
+		/// <example>
+		/// 0001 [........00000064] Int    : 100
+		/// </example>
+		[PacketHandler(Op.BankDeposit)]
+		public void BankDeposit(ChannelClient client, Packet packet)
+		{
+			var amount = packet.GetInt();
+
+			var creature = client.GetCreature(packet.Id);
+			if (creature == null)
+				return;
+
+			var success = creature.Client.OpenBank.Deposit(amount);
+
+			Send.BankDepositR(creature, success);
+		}
+
+		/// <summary>
+		/// Withdraw gold from the bank.
+		/// </summary>
+		/// <param name="client"></param>
+		/// <param name="packet"></param>
+		/// <example>
+		/// 0001 [..............00] Byte   : 0
+		/// 0002 [........00000064] Int    : 100
+		/// </example>
+		[PacketHandler(Op.BankWithdraw)]
+		public void BankWithdraw(ChannelClient client, Packet packet)
+		{
+			var val = packet.GetByte(); // Always 0?
+			var amount = packet.GetInt();
+
+			var creature = client.GetCreature(packet.Id);
+			if (creature == null)
+				return;
+
+			var success = creature.Client.OpenBank.Withdraw(amount);
+
+			Send.BankWithdrawR(creature, success);
+		}
+
+		/// <summary>
 		/// Sent when closing the bank dialog.
 		/// </summary>
 		/// <example>

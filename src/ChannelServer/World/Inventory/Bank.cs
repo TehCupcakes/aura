@@ -61,6 +61,51 @@ namespace Aura.Channel.World
 		}
 
 		/// <summary>
+		/// Deposits a given amount of gold from the bank.
+		/// </summary>
+		/// <param name="amount"></param>
+		/// <returns></returns>
+		public bool Deposit(int amount)
+		{
+			if (_creature.Inventory.Gold < amount)
+				return false;
+
+			var success = _creature.Inventory.RemoveGold(amount);
+			if (success)
+			{
+				Gold += amount;
+				
+				// 10% depositing fee for non-GMs
+				//if (_creature.Client.Account.Authority < 50)
+				//Gold -= amount / 10;
+
+				Send.BankGoldSet(_creature, Gold);
+			}
+
+			return success;
+		}
+
+		/// <summary>
+		/// Withdraws a given amount of gold from the bank.
+		/// </summary>
+		/// <param name="amount"></param>
+		/// <returns></returns>
+		public bool Withdraw(int amount)
+		{
+			if (Gold < amount)
+				return false;
+
+			_creature.Inventory.AddGold(amount);
+			Gold -= amount;
+			Send.BankGoldSet(_creature, Gold);
+
+			return true;
+		}
+
+		/* The following methods come from Inventory; some may
+		 * be needed, others may not
+		 * 
+		/// <summary>
 		/// These pockets aren't checked by the Count() method
 		/// </summary>
 		public readonly IEnumerable<Pocket> InvisiblePockets = new[]
@@ -685,6 +730,7 @@ namespace Aura.Channel.World
 					Send.ItemRemove(_creature, item);
 			}
 		}
+		 */
 
 		/// <summary>
 		/// Converts bank location to a displayable string.
