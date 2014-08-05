@@ -408,7 +408,10 @@ namespace Aura.Channel.Scripting.Scripts
 		{
 			// TODO: Check if bank exists before making a new one.
 			var bank = new Bank(this.Player, location);
-			Send.OpenBank(this.Player, location);
+			if (bank.Locked)
+				Send.OpenBank(this.Player, this.Player.Client.OpenBank, bank.Assistant, (byte)51);
+			else
+				Send.OpenBank(this.Player, this.Player.Client.OpenBank);
 		}
 
 		/// <summary>

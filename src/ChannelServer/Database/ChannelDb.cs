@@ -20,6 +20,7 @@ using Aura.Shared.Mabi;
 using Aura.Shared.Mabi.Const;
 using Aura.Shared.Util;
 using MySql.Data.MySqlClient;
+using System.Security.Cryptography;
 
 namespace Aura.Channel.Database
 {
@@ -1152,6 +1153,10 @@ namespace Aura.Channel.Database
 							bank.Id = reader.GetInt64("bankId");
 							bank.Gold = reader.GetInt32("gold");
 							bank.LastOpened = reader.GetDateTime("lastOpened").Ticks;
+							if (reader.GetStringSafe("lock") == "")
+								bank.Locked = false;
+							else
+								bank.Locked = true;
 						}
 						else
 						{
@@ -1264,6 +1269,79 @@ namespace Aura.Channel.Database
 				Log.Debug(e);
 				return false;
 			}
+		}
+
+		/// <summary>
+		/// Attempts to change the bank lock from oldLock to newLock.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="oldLock"></param>
+		/// <param name="newLock"></param>
+		/// <returns></returns>
+		public byte ChangeBankLock(Creature creature, string oldLock, string newLock)
+		{
+			byte result = 0;
+
+			if (CheckBankLock(creature, oldLock))
+			{
+				using (var conn = AuraDb.Instance.Connection)
+				using (var transaction = conn.BeginTransaction())
+				{
+					using (var cmd = new UpdateCommand("UPDATE `banks` SET {0} WHERE `accountId` = @id", conn, transaction))
+					{
+						cmd.AddParameter("@id", creature.Client.Account.Id);
+						cmd.Set("lock", newLock);
+
+						cmd.Execute();
+					}
+
+					transaction.Commit();
+				}
+
+				if (newLock == "")
+					result = 0;
+				else
+					result = 1;
+			}
+			else
+			{
+				// Password didn't match
+				result = 3;
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Checks if the hashed pass matches bank lock.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="md5pass"></param>
+		/// <returns></returns>
+		public bool CheckBankLock(Creature creature, string md5pass)
+		{
+			using (var conn = AuraDb.Instance.Connection)
+			using (var transaction = conn.BeginTransaction())
+			{
+				using (var mc = new MySqlCommand("SELECT * FROM `banks` WHERE `accountId` = @id", conn))
+				{
+					mc.Parameters.AddWithValue("@id", creature.Client.Account.Id);
+
+					using (var reader = mc.ExecuteReader())
+					{
+						if (reader.HasRows)
+						{
+							reader.Read();
+
+							var realLock = reader.GetStringSafe("lock");
+							if (md5pass == realLock || realLock == "")
+								return true;
+						}
+					}
+				}
+			}
+
+			return false;
 		}
 	}
 }

@@ -402,6 +402,8 @@ namespace Aura.Shared.Network
 		public const int UmbrellaLand = 0xA8E2;
 		public const int LockBank = 0xA8E3;
 		public const int LockBankR = 0xA8E4;
+		public const int BankLockCheck = 0xA8E5;
+		public const int BankLockCheckR = 0xA8E6;
 		public const int SetBgm = 0xA910;
 		public const int UnsetBgm = 0xA911;
 		public const int EnableRoyalAlchemist = 0xA9A3;
