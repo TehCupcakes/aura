@@ -28,8 +28,8 @@ namespace Aura.Channel.World
 
 		private Creature _creature;
 		private Dictionary<Pocket, InventoryPocket> _pockets;
+		public DateTime LastOpened { get; set; }
 		public long Id { get; set; }
-		public long LastOpened { get; set; }
 		public byte Assistant { get; set; }
 		public int Gold { get; set; }
 		public int Height { get; set; }
@@ -42,7 +42,7 @@ namespace Aura.Channel.World
 		{
 			_creature = creature;
 			_pockets = new Dictionary<Pocket, InventoryPocket>();
-			LastOpened = DateTime.Now.Ticks;
+			LastOpened = DateTime.Now;
 			Assistant = 0;
 			Gold = 0;
 			Height = DefaultHeight;

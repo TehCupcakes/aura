@@ -1152,7 +1152,7 @@ namespace Aura.Channel.Database
 
 							bank.Id = reader.GetInt64("bankId");
 							bank.Gold = reader.GetInt32("gold");
-							bank.LastOpened = reader.GetDateTime("lastOpened").Ticks;
+							bank.LastOpened = reader.GetDateTime("lastOpened");
 							if (reader.GetStringSafe("lock") == "")
 								bank.Locked = false;
 							else
@@ -1160,12 +1160,14 @@ namespace Aura.Channel.Database
 						}
 						else
 						{
+							reader.Close();
+
 							// This account doesn't have a bank yet, so make a new one
 							using (var cmd = new InsertCommand("INSERT INTO `banks` {0}", conn, transaction))
 							{
 								cmd.Set("accountId", creature.Client.Account.Id);
 								cmd.Set("gold", bank.Gold);
-								cmd.Set("lastOpened", bank.LastOpened);
+								cmd.Set("lastOpened", bank.LastOpened.ToString("yyyy-MM-dd HH:mm:ss"));
 
 								cmd.Execute();
 								bank.Id = cmd.LastId;
@@ -1192,8 +1194,6 @@ namespace Aura.Channel.Database
 			if (bank == null)
 				return 0;
 
-			int result = 0;
-
 			using (var conn = AuraDb.Instance.Connection)
 			using (var transaction = conn.BeginTransaction())
 			{
@@ -1210,13 +1210,13 @@ namespace Aura.Channel.Database
 							//bank.Assistant = reader.GetByte("assistantId");
 							bank.Width = reader.GetInt32("width");
 							bank.Height = reader.GetInt32("height");
-
-							result = 1;
 						}
 						else
 						{
+							reader.Close();
+
 							// This creature doesn't have a bank account yet, so make a new one
-							using (var cmd = new InsertCommand("INSERT INTO `banks_accounts` {0}", conn, transaction))
+							using (var cmd = new InsertCommand("INSERT INTO `bank_accounts` {0}", conn, transaction))
 							{
 								cmd.Set("creatureName", creature.Name);
 								cmd.Set("bankId", bank.Id);
@@ -1226,7 +1226,6 @@ namespace Aura.Channel.Database
 
 								cmd.Execute();
 							}
-							result = 0;
 						}
 					}
 				}
@@ -1234,7 +1233,12 @@ namespace Aura.Channel.Database
 				transaction.Commit();
 			}
 
-			return result;
+			// Check if bank being loaded is an assistant creature.
+			// If so, and they don't exist, return 0. Else, return 1
+			if (bank.Assistant != 0)
+				return 0;
+
+			return 1;
 		}
 
 		/// <summary>
@@ -1255,7 +1259,7 @@ namespace Aura.Channel.Database
 				{
 					cmd.AddParameter("@id", creature.Client.Account.Id);
 					cmd.Set("gold", bank.Gold);
-					cmd.Set("lastOpened", DateTime.Now);
+					cmd.Set("lastOpened", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
 					cmd.Execute();
 				}

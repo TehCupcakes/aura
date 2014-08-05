@@ -70,7 +70,7 @@ namespace Aura.Channel.Network.Sending
 			if (msg == 1)	// Default when unlocked. Go ahead and open the bank
 			{
 				packet.PutByte(assistant);
-				packet.PutLong(bank.LastOpened);
+				packet.PutLong(bank.LastOpened.Ticks);
 				packet.PutByte(bank.Locked);
 				packet.PutString(creature.Client.Account.Id);
 				packet.PutString(bank.Location);
