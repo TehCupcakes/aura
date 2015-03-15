@@ -134,12 +134,34 @@ public class DeianScript : NpcScript
 				Msg("Oh, you are talking about Dilys' place.<br/>Sometimes, even when I bring a sick lamb, she still treats it with extra care.<br/>I guess lambs and humans aren't that much different when they're sick...");
 				break;
 
+			case "shop_inn":
+				GiveKeyword("skill_campfire");
+				Msg("Staying up all night, sleeping under trees during the day...<br/>When you have my lifestyle, you don't need to sleep at an Inn!<br/>All I need is the Campfire skill to survive!");
+				break;
+
 			case "shop_bank":
 				Msg("Darn, I wish I had enough items to deposit at the Bank.<br/>Did you talk to Bebhinn?<br/>Bebhinn loves to talk about other people.<br/>You'd better be careful when you talk to her.");
 				break;
 
 			case "shop_smith":
 				Msg("The Blacksmith's Shop is too hot. I just hate the heat.<br/>I'd rather be under the shade of a nice tree...<br/>");
+				break;
+
+			case "skill_campfire":
+				if(HasSkill(SkillId.Campfire))
+				{
+					Msg("Hey, you! What are you doing! <br/>Are you trying to use the Campfire skill here? <br/>Are you crazy!? You want to burn all my wool? <br/>Go away! Go away! <br/>You want to play with fire? Go do it far away from here!");
+				}
+				else
+				{
+					Msg("Are you here to learn the Campfire skill?<br/>Do you see that burnt spot on the ground over there?  Yeah, I've been trying to learn that skill myself.<br/>But no matter how much I try, I just can;t get it.");
+					Msg("All I get is smoke, and the spark won't catch on fire.<br/>It's driving me crazy...<br/>I even went to Duncan's house and secretly borrowed a book he had about campfires, but it didn't help.  <br/>In other words, I can't teach the skill to you even if I wanted to.");
+					Msg("What?  You want to see the book? <br/>Umm. Fine, you did help me with my sheep.<br/>Here, take this book and the campfire material I have.<br/>I owe you anyway.");
+					//NOTE: This bit has changed a few times... I believe in G1 he simply gave you the skill book,
+					//(As the text would suggest), but now he gives 24-hour quest: Shephard Boy's Request (G?)
+					if(!HasItem(1012))
+						GiveItem(1012);
+				}
 				break;
 
 			case "skill_counter_attack":
